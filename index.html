@@ -445,6 +445,7 @@ const $btnReset = document.getElementById('btnReset');
 const $inputH = document.getElementById('inputH');
 const $inputM = document.getElementById('inputM');
 const $inputS = document.getElementById('inputS');
+const $overlay = document.getElementById('modalOverlay');
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -458,15 +459,17 @@ function renderTimer() {
   const totalH = Math.floor(totalSeconds / 3600);
   const totalM = Math.floor((totalSeconds % 3600) / 60);
   const totalS = totalSeconds % 60;
-  $inputH.value = totalH;
-  $inputM.value = totalM;
-  $inputS.value = totalS;
+  if (!$overlay.classList.contains('active')) {
+    $inputH.value = totalH;
+    $inputM.value = totalM;
+    $inputS.value = totalS;
+  }
 }
 
 function applySettings() {
-  const h = parseInt($inputH.value) || 0;
-  const mn = parseInt($inputM.value) || 0;
-  const sc = parseInt($inputS.value) || 0;
+  const h = Math.max(0, parseInt($inputH.value) || 0);
+  const mn = Math.min(59, Math.max(0, parseInt($inputM.value) || 0));
+  const sc = Math.min(59, Math.max(0, parseInt($inputS.value) || 0));
   totalSeconds = h * 3600 + mn * 60 + sc;
   remainingSeconds = totalSeconds;
   renderTimer();
@@ -484,7 +487,9 @@ function tick() {
 function startTimer() {
   if (remainingSeconds <= 0) return;
   if (timerId) return;
-  applySettings();
+  if (remainingSeconds === totalSeconds) {
+    applySettings();
+  }
   timerId = setInterval(tick, 1000);
 }
 
