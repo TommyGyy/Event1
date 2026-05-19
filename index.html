@@ -439,21 +439,27 @@ let timerId = null;
 const STORAGE_KEY = 'countdown_state';
 
 function saveState() {
-  const state = {
-    totalSeconds: totalSeconds,
-    remainingSeconds: remainingSeconds,
-    activities: activities,
-    theme: document.body.classList.contains('warm') ? 'warm' : 'dark'
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    const state = {
+      totalSeconds: totalSeconds,
+      remainingSeconds: remainingSeconds,
+      activities: activities,
+      theme: document.body.classList.contains('warm') ? 'warm' : 'dark'
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {
+    // localStorage full or unavailable
+  }
 }
+
+window.addEventListener('beforeunload', saveState);
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return false;
   try {
     const state = JSON.parse(raw);
-    totalSeconds = state.totalSeconds || 9000;
+    totalSeconds = state.totalSeconds != null ? state.totalSeconds : 9000;
     remainingSeconds = state.remainingSeconds != null ? state.remainingSeconds : totalSeconds;
     activities = state.activities && state.activities.length > 0 ? state.activities : [...defaultActivities];
     setTheme(state.theme || 'dark');
@@ -526,7 +532,6 @@ function tick() {
   }
   remainingSeconds--;
   renderTimer();
-  saveState();
 }
 
 function startTimer() {
