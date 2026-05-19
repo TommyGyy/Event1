@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>一号链接倒计时</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-start: #0a0a1a;
+  --bg-end: #1a0a2e;
+  --card-bg: rgba(255,255,255,0.06);
+  --text: #e0d6f0;
+  --text-secondary: rgba(224,214,240,0.6);
+  --accent: #c084fc;
+  --accent-glow: 0 0 20px rgba(192,132,252,0.5), 0 0 60px rgba(192,132,252,0.2);
+  --accent-text-glow: 0 0 10px rgba(192,132,252,0.6), 0 0 30px rgba(192,132,252,0.3);
+  --btn-bg: rgba(192,132,252,0.2);
+  --btn-active: #c084fc;
+  --divider: rgba(255,255,255,0.1);
+  --toggle-bg: rgba(255,255,255,0.15);
+  --toggle-dot: #c084fc;
+}
+
+body.warm {
+  --bg-start: #1a0a00;
+  --bg-end: #331100;
+  --card-bg: rgba(255,255,255,0.06);
+  --text: #f0d8b8;
+  --text-secondary: rgba(240,216,184,0.6);
+  --accent: #f59e0b;
+  --accent-glow: 0 0 20px rgba(245,158,11,0.5), 0 0 60px rgba(245,158,11,0.2);
+  --accent-text-glow: 0 0 10px rgba(245,158,11,0.6), 0 0 30px rgba(245,158,11,0.3);
+  --btn-bg: rgba(245,158,11,0.2);
+  --btn-active: #f59e0b;
+  --divider: rgba(255,255,255,0.1);
+  --toggle-bg: rgba(255,255,255,0.15);
+  --toggle-dot: #f59e0b;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: var(--accent-text-glow);
+  margin-bottom: 20px;
+}
+
+/* countdown section */
+.countdown-section {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.timer-digit {
+  font-size: clamp(40px, 12vw, 72px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  text-shadow: var(--accent-text-glow);
+  min-width: 2ch;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.timer-sep {
+  font-size: clamp(32px, 10vw, 56px);
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.timer-labels {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.timer-labels span {
+  min-width: 2ch;
+  text-align: center;
+}
+
+.settings-trigger {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: var(--btn-bg);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* theme toggle */
+.theme-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.toggle {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--toggle-bg);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--toggle-dot);
+  transition: transform 0.3s;
+}
+
+body.warm .toggle::after {
+  transform: translateX(22px);
+}
+
+/* activity list */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border: 1px solid var(--divider);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+}
+
+.activity-item .text {
+  flex: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.activity-item .actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.activity-item .actions button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.activity-item .actions button:active {
+  background: var(--btn-bg);
+  color: var(--accent);
+}
+
+/* activity edit input */
+.activity-item input {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 15px;
+  padding: 6px 10px;
+  outline: none;
+  font-family: inherit;
+}
+
+.add-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--divider);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.add-btn:active {
+  background: var(--card-bg);
+  color: var(--accent);
+}
+
+/* modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(135deg, #12122a, #1a1030);
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px 32px;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+
+body.warm .modal {
+  background: linear-gradient(135deg, #1a1005, #2a1508);
+}
+
+.modal-overlay.active .modal {
+  transform: translateY(0);
+}
+
+.modal h3 {
+  font-size: 18px;
+  color: var(--accent);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal .field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.modal .field-row label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: center;
+}
+
+.modal .field-row input {
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 20px;
+  text-align: center;
+  padding: 8px;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+}
+
+.modal .field-row input:focus {
+  border-color: var(--accent);
+}
+
+.modal .theme-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.modal .theme-options button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid var(--divider);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal .theme-options button.active-theme {
+  border-color: var(--accent);
+  background: var(--btn-bg);
+  color: var(--accent);
+}
+
+.modal .ctrl-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.modal .ctrl-btns button {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal .ctrl-btns .btn-start {
+  background: var(--accent);
+}
+
+.modal .ctrl-btns .btn-pause {
+  background: rgba(255,255,255,0.12);
+  color: var(--text);
+}
+
+.modal .ctrl-btns .btn-reset {
+  background: rgba(255,255,255,0.12);
+  color: var(--text);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">一号链接倒计时</div>
+
+  <div class="countdown-section">
+    <div class="timer">
+      <span class="timer-digit" id="h">02</span>
+      <span class="timer-sep">:</span>
+      <span class="timer-digit" id="m">30</span>
+      <span class="timer-sep">:</span>
+      <span class="timer-digit" id="s">00</span>
+    </div>
+    <div class="timer-labels">
+      <span style="min-width:2ch;">时</span>
+      <span style="width:12px;"></span>
+      <span style="min-width:2ch;">分</span>
+      <span style="width:12px;"></span>
+      <span style="min-width:2ch;">秒</span>
+    </div>
+    <div class="settings-trigger" id="settingsBtn">⚙ 设置</div>
+  </div>
+
+  <div class="theme-row">
+    <span>🌙 暗夜舞台</span>
+    <div class="toggle" id="themeToggle"></div>
+    <span>🔥 篝火暖色</span>
+  </div>
+
+  <div class="activity-list" id="activityList"></div>
+  <button class="add-btn" id="addBtn">+ 添加活动</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>⚙ 倒计时设置</h3>
+    <div class="field-row">
+      <label>时</label>
+      <input type="number" id="inputH" min="0" max="99" value="2" inputmode="numeric">
+      <label>分</label>
+      <input type="number" id="inputM" min="0" max="59" value="30" inputmode="numeric">
+      <label>秒</label>
+      <input type="number" id="inputS" min="0" max="59" value="0" inputmode="numeric">
+    </div>
+    <div class="theme-options">
+      <button id="themeDark" class="active-theme">🌙 暗夜</button>
+      <button id="themeWarm">🔥 篝火</button>
+    </div>
+    <div class="ctrl-btns">
+      <button class="btn-start" id="btnStart">▶ 开始</button>
+      <button class="btn-pause" id="btnPause">⏸ 暂停</button>
+      <button class="btn-reset" id="btnReset">↺ 重置</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
