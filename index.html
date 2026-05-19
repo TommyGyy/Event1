@@ -430,5 +430,81 @@ body.warm .modal {
     </div>
   </div>
 </div>
+<script>
+// --- state ---
+let totalSeconds = 9000; // default 2h30m
+let remainingSeconds = totalSeconds;
+let timerId = null;
+
+const $h = document.getElementById('h');
+const $m = document.getElementById('m');
+const $s = document.getElementById('s');
+const $btnStart = document.getElementById('btnStart');
+const $btnPause = document.getElementById('btnPause');
+const $btnReset = document.getElementById('btnReset');
+const $inputH = document.getElementById('inputH');
+const $inputM = document.getElementById('inputM');
+const $inputS = document.getElementById('inputS');
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function renderTimer() {
+  const totalH = Math.floor(totalSeconds / 3600);
+  const totalM = Math.floor((totalSeconds % 3600) / 60);
+  const totalS = totalSeconds % 60;
+  $h.textContent = pad(totalH);
+  $m.textContent = pad(totalM);
+  $s.textContent = pad(totalS);
+  $inputH.value = totalH;
+  $inputM.value = totalM;
+  $inputS.value = totalS;
+}
+
+function applySettings() {
+  const h = parseInt($inputH.value) || 0;
+  const mn = parseInt($inputM.value) || 0;
+  const sc = parseInt($inputS.value) || 0;
+  totalSeconds = h * 3600 + mn * 60 + sc;
+  remainingSeconds = totalSeconds;
+  renderTimer();
+}
+
+function tick() {
+  if (remainingSeconds <= 0) {
+    pauseTimer();
+    return;
+  }
+  remainingSeconds--;
+  renderTimer();
+}
+
+function startTimer() {
+  if (remainingSeconds <= 0) return;
+  if (timerId) return;
+  applySettings();
+  timerId = setInterval(tick, 1000);
+}
+
+function pauseTimer() {
+  if (timerId) { clearInterval(timerId); timerId = null; }
+}
+
+function resetTimer() {
+  pauseTimer();
+  remainingSeconds = totalSeconds;
+  renderTimer();
+}
+
+$btnStart.addEventListener('click', startTimer);
+$btnPause.addEventListener('click', pauseTimer);
+$btnReset.addEventListener('click', resetTimer);
+
+// update input -> auto apply
+[$inputH, $inputM, $inputS].forEach(function(el) {
+  el.addEventListener('change', applySettings);
+});
+
+renderTimer();
+</script>
 </body>
 </html>
