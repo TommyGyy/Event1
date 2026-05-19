@@ -594,6 +594,35 @@ $addBtn.addEventListener('click', function() {
 // initial render
 renderActivities();
 
+// --- theme ---
+const $themeToggle = document.getElementById('themeToggle');
+const $themeDark = document.getElementById('themeDark');
+const $themeWarm = document.getElementById('themeWarm');
+
+function setTheme(theme) {
+  if (theme === 'warm') {
+    document.body.classList.add('warm');
+    $themeDark.classList.remove('active-theme');
+    $themeWarm.classList.add('active-theme');
+  } else {
+    document.body.classList.remove('warm');
+    $themeDark.classList.add('active-theme');
+    $themeWarm.classList.remove('active-theme');
+  }
+}
+
+$themeToggle.addEventListener('click', function() {
+  const next = document.body.classList.contains('warm') ? 'dark' : 'warm';
+  setTheme(next);
+  saveTheme();
+});
+
+$themeDark.addEventListener('click', function() { setTheme('dark'); saveTheme(); });
+$themeWarm.addEventListener('click', function() { setTheme('warm'); saveTheme(); });
+
+// placeholder - will be filled in Task 6
+function saveTheme() {}
+
 // placeholder - will be replaced in Task 6
 function saveActivities() {}
 </script>
