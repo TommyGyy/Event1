@@ -447,6 +447,22 @@ const $inputM = document.getElementById('inputM');
 const $inputS = document.getElementById('inputS');
 const $overlay = document.getElementById('modalOverlay');
 
+// --- modal ---
+const $settingsBtn = document.getElementById('settingsBtn');
+
+function openModal() {
+  $overlay.classList.add('active');
+}
+
+function closeModal() {
+  $overlay.classList.remove('active');
+}
+
+$settingsBtn.addEventListener('click', openModal);
+$overlay.addEventListener('click', function(e) {
+  if (e.target === $overlay) closeModal();
+});
+
 function pad(n) { return String(n).padStart(2, '0'); }
 
 function renderTimer() {
