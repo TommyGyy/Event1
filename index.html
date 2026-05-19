@@ -529,6 +529,73 @@ $btnReset.addEventListener('click', resetTimer);
 });
 
 renderTimer();
+
+// --- activities ---
+const defaultActivities = ['烟花秀', '电音节', '星空大合唱', '灯光花海', '山体激光秀'];
+let activities = [...defaultActivities];
+
+const $list = document.getElementById('activityList');
+const $addBtn = document.getElementById('addBtn');
+
+function renderActivities() {
+  $list.innerHTML = '';
+  activities.forEach(function(item, i) {
+    const div = document.createElement('div');
+    div.className = 'activity-item';
+
+    const text = document.createElement('span');
+    text.className = 'text';
+    text.textContent = item;
+    text.addEventListener('click', function() { editActivity(i); });
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏';
+    editBtn.addEventListener('click', function() { editActivity(i); });
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', function() { deleteActivity(i); });
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    div.appendChild(text);
+    div.appendChild(actions);
+    $list.appendChild(div);
+  });
+}
+
+function editActivity(index) {
+  const newText = prompt('编辑活动名称', activities[index]);
+  if (newText !== null && newText.trim() !== '') {
+    activities[index] = newText.trim();
+    renderActivities();
+    saveActivities();
+  }
+}
+
+function deleteActivity(index) {
+  activities.splice(index, 1);
+  renderActivities();
+  saveActivities();
+}
+
+$addBtn.addEventListener('click', function() {
+  const newText = prompt('输入活动名称');
+  if (newText !== null && newText.trim() !== '') {
+    activities.push(newText.trim());
+    renderActivities();
+    saveActivities();
+  }
+});
+
+// initial render
+renderActivities();
+
+// placeholder - will be replaced in Task 6
+function saveActivities() {}
 </script>
 </body>
 </html>
