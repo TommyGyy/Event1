@@ -449,12 +449,15 @@ const $inputS = document.getElementById('inputS');
 function pad(n) { return String(n).padStart(2, '0'); }
 
 function renderTimer() {
+  const hh = Math.floor(remainingSeconds / 3600);
+  const mm = Math.floor((remainingSeconds % 3600) / 60);
+  const ss = remainingSeconds % 60;
+  $h.textContent = pad(hh);
+  $m.textContent = pad(mm);
+  $s.textContent = pad(ss);
   const totalH = Math.floor(totalSeconds / 3600);
   const totalM = Math.floor((totalSeconds % 3600) / 60);
   const totalS = totalSeconds % 60;
-  $h.textContent = pad(totalH);
-  $m.textContent = pad(totalM);
-  $s.textContent = pad(totalS);
   $inputH.value = totalH;
   $inputM.value = totalM;
   $inputS.value = totalS;
