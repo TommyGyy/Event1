@@ -100,14 +100,21 @@ body {
   display: flex;
   justify-content: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   letter-spacing: 1px;
 }
 
 .timer-labels span {
-  min-width: 2ch;
   text-align: center;
+}
+
+.timer-labels span:nth-child(odd) {
+  min-width: 2ch;
+}
+
+.timer-labels span:nth-child(even) {
+  width: clamp(12px, 4vw, 18px);
 }
 
 .settings-trigger {
@@ -116,7 +123,8 @@ body {
   font-size: 13px;
   color: var(--accent);
   cursor: pointer;
-  padding: 6px 16px;
+  padding: 10px 20px;
+  min-height: 44px;
   border-radius: 20px;
   background: var(--btn-bg);
   user-select: none;
@@ -135,9 +143,9 @@ body {
 }
 
 .toggle {
-  width: 48px;
-  height: 26px;
-  border-radius: 13px;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
   background: var(--toggle-bg);
   cursor: pointer;
   position: relative;
@@ -150,15 +158,15 @@ body {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--toggle-dot);
   transition: transform 0.3s;
 }
 
 body.warm .toggle::after {
-  transform: translateX(22px);
+  transform: translateX(20px);
 }
 
 /* activity list */
@@ -194,8 +202,8 @@ body.warm .toggle::after {
 }
 
 .activity-item .actions button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   background: rgba(255,255,255,0.1);
@@ -358,6 +366,7 @@ body.warm .modal {
   font-weight: 600;
   cursor: pointer;
   color: #fff;
+  min-height: 44px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -389,11 +398,11 @@ body.warm .modal {
       <span class="timer-digit" id="s">00</span>
     </div>
     <div class="timer-labels">
-      <span style="min-width:2ch;">时</span>
-      <span style="width:12px;"></span>
-      <span style="min-width:2ch;">分</span>
-      <span style="width:12px;"></span>
-      <span style="min-width:2ch;">秒</span>
+      <span>时</span>
+      <span></span>
+      <span>分</span>
+      <span></span>
+      <span>秒</span>
     </div>
     <div class="settings-trigger" id="settingsBtn">⚙ 设置</div>
   </div>
@@ -444,7 +453,8 @@ function saveState() {
       totalSeconds: totalSeconds,
       remainingSeconds: remainingSeconds,
       activities: activities,
-      theme: document.body.classList.contains('warm') ? 'warm' : 'dark'
+      theme: document.body.classList.contains('warm') ? 'warm' : 'dark',
+      running: !!timerId
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch(e) {
@@ -463,6 +473,9 @@ function loadState() {
     remainingSeconds = state.remainingSeconds != null ? state.remainingSeconds : totalSeconds;
     activities = state.activities && state.activities.length > 0 ? state.activities : [...defaultActivities];
     setTheme(state.theme || 'dark');
+    if (state.running && remainingSeconds > 0) {
+      timerId = setInterval(tick, 1000);
+    }
     return true;
   } catch(e) {
     return false;
@@ -607,27 +620,72 @@ function renderActivities() {
 }
 
 function editActivity(index) {
-  const newText = prompt('编辑活动名称', activities[index]);
-  if (newText !== null && newText.trim() !== '') {
-    activities[index] = newText.trim();
+  var items = $list.querySelectorAll('.activity-item');
+  var item = items[index];
+  var textEl = item.querySelector('.text');
+  var actionsEl = item.querySelector('.actions');
+
+  var input = document.createElement('input');
+  input.value = activities[index];
+
+  var save = function() {
+    var val = input.value.trim();
+    if (val) {
+      activities[index] = val;
+      saveState();
+    }
     renderActivities();
-    saveState();
-  }
+  };
+
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { input.blur(); }
+  });
+
+  textEl.replaceWith(input);
+  actionsEl.style.display = 'none';
+  input.focus();
 }
 
 function deleteActivity(index) {
+  if (!confirm('确定删除"' + activities[index] + '"？')) return;
   activities.splice(index, 1);
   renderActivities();
   saveState();
 }
 
 $addBtn.addEventListener('click', function() {
-  const newText = prompt('输入活动名称');
-  if (newText !== null && newText.trim() !== '') {
-    activities.push(newText.trim());
+  activities.push('');
+  renderActivities();
+  // After rendering, immediately edit the last (new) item
+  var lastIdx = activities.length - 1;
+  var items = $list.querySelectorAll('.activity-item');
+  var item = items[lastIdx];
+  var textEl = item.querySelector('.text');
+  var actionsEl = item.querySelector('.actions');
+
+  var input = document.createElement('input');
+  input.placeholder = '输入活动名称';
+
+  var save = function() {
+    var val = input.value.trim();
+    if (val) {
+      activities[lastIdx] = val;
+      saveState();
+    } else {
+      activities.splice(lastIdx, 1);
+    }
     renderActivities();
-    saveState();
-  }
+  };
+
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { input.blur(); }
+  });
+
+  textEl.replaceWith(input);
+  actionsEl.style.display = 'none';
+  input.focus();
 });
 
 // --- theme ---
