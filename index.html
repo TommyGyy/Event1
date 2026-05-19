@@ -436,6 +436,33 @@ let totalSeconds = 9000; // default 2h30m
 let remainingSeconds = totalSeconds;
 let timerId = null;
 
+const STORAGE_KEY = 'countdown_state';
+
+function saveState() {
+  const state = {
+    totalSeconds: totalSeconds,
+    remainingSeconds: remainingSeconds,
+    activities: activities,
+    theme: document.body.classList.contains('warm') ? 'warm' : 'dark'
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    const state = JSON.parse(raw);
+    totalSeconds = state.totalSeconds || 9000;
+    remainingSeconds = state.remainingSeconds != null ? state.remainingSeconds : totalSeconds;
+    activities = state.activities && state.activities.length > 0 ? state.activities : [...defaultActivities];
+    setTheme(state.theme || 'dark');
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
 const $h = document.getElementById('h');
 const $m = document.getElementById('m');
 const $s = document.getElementById('s');
@@ -489,6 +516,7 @@ function applySettings() {
   totalSeconds = h * 3600 + mn * 60 + sc;
   remainingSeconds = totalSeconds;
   renderTimer();
+  saveState();
 }
 
 function tick() {
@@ -498,6 +526,7 @@ function tick() {
   }
   remainingSeconds--;
   renderTimer();
+  saveState();
 }
 
 function startTimer() {
@@ -517,6 +546,7 @@ function resetTimer() {
   pauseTimer();
   remainingSeconds = totalSeconds;
   renderTimer();
+  saveState();
 }
 
 $btnStart.addEventListener('click', startTimer);
@@ -528,14 +558,18 @@ $btnReset.addEventListener('click', resetTimer);
   el.addEventListener('change', applySettings);
 });
 
-renderTimer();
-
 // --- activities ---
 const defaultActivities = ['烟花秀', '电音节', '星空大合唱', '灯光花海', '山体激光秀'];
-let activities = [...defaultActivities];
-
 const $list = document.getElementById('activityList');
 const $addBtn = document.getElementById('addBtn');
+let activities = [];
+
+// 保持原有默认值，尝试加载持久化状态
+if (!loadState()) {
+  activities = [...defaultActivities];
+}
+renderTimer();
+renderActivities();
 
 function renderActivities() {
   $list.innerHTML = '';
@@ -572,14 +606,14 @@ function editActivity(index) {
   if (newText !== null && newText.trim() !== '') {
     activities[index] = newText.trim();
     renderActivities();
-    saveActivities();
+    saveState();
   }
 }
 
 function deleteActivity(index) {
   activities.splice(index, 1);
   renderActivities();
-  saveActivities();
+  saveState();
 }
 
 $addBtn.addEventListener('click', function() {
@@ -587,12 +621,9 @@ $addBtn.addEventListener('click', function() {
   if (newText !== null && newText.trim() !== '') {
     activities.push(newText.trim());
     renderActivities();
-    saveActivities();
+    saveState();
   }
 });
-
-// initial render
-renderActivities();
 
 // --- theme ---
 const $themeToggle = document.getElementById('themeToggle');
@@ -614,17 +645,12 @@ function setTheme(theme) {
 $themeToggle.addEventListener('click', function() {
   const next = document.body.classList.contains('warm') ? 'dark' : 'warm';
   setTheme(next);
-  saveTheme();
+  saveState();
 });
 
-$themeDark.addEventListener('click', function() { setTheme('dark'); saveTheme(); });
-$themeWarm.addEventListener('click', function() { setTheme('warm'); saveTheme(); });
+$themeDark.addEventListener('click', function() { setTheme('dark'); saveState(); });
+$themeWarm.addEventListener('click', function() { setTheme('warm'); saveState(); });
 
-// placeholder - will be filled in Task 6
-function saveTheme() {}
-
-// placeholder - will be replaced in Task 6
-function saveActivities() {}
 </script>
 </body>
 </html>
